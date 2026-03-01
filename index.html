@@ -567,15 +567,25 @@ function render(){
   document.getElementById('chipbar').innerHTML=
     (ov?`<div class="chip c-red">⚠️ ${ov} Overdue</div>`:'')+
     (so?`<div class="chip c-amber">⏰ ${so} Due Soon</div>`:'')+
-    `<div class="chip c-green">✓ ${ok} On Track</div>`;
+    `<div class="chip c-green">✓ ${ok} On Track</div>`+
+    `<div class="chip" style="background:var(--surface2);color:var(--muted);border-color:var(--border)">📋 Next 14 days</div>`;
 
   const list=document.getElementById('taskList');
   if(!tasks.length){
     list.innerHTML=`<div class="empty"><div class="empty-ico">🏠</div><div class="empty-txt">No reminders yet.<br>Tap <strong>+</strong> to add your first one.</div></div>`;
     return;
   }
+  // Only show overdue or due within 14 days
+  const upcoming=tasks.filter(t=>{
+    const d=daysUntil(dueDate(t).toISOString().split('T')[0]);
+    return d<=14;
+  });
+  if(!upcoming.length){
+    list.innerHTML=`<div class="empty"><div class="empty-ico">✅</div><div class="empty-txt">All clear! Nothing due<br>in the next 14 days.</div></div>`;
+    return;
+  }
   const ord={over:0,soon:1,ok:2};
-  list.innerHTML=[...tasks].sort((a,b)=>ord[status(a)]-ord[status(b)]).map(t=>{
+  list.innerHTML=[...upcoming].sort((a,b)=>ord[status(a)]-ord[status(b)]).map(t=>{
     const s=status(t), cat=CATS[t.cat], p=progress(t);
     const ico=s==='over'?'⚠️':s==='soon'?'⏰':'✓';
     const al=assignLabel(t);
