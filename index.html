@@ -190,6 +190,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 .view{display:none;}.view.active{display:block;}
 
+/* EMERGENCY CONTACTS */
+.contacts-strip{display:flex;gap:6px;padding:0 24px 14px;overflow-x:auto;scrollbar-width:none;}
+.contacts-strip::-webkit-scrollbar{display:none;}
+.contact-btn{flex-shrink:0;display:flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:8px 14px;text-decoration:none;box-shadow:var(--shadow);}
+.contact-btn.emergency{background:var(--red-bg);border-color:rgba(184,48,64,.25);}
+.contact-ico{font-size:14px;}
+.contact-info{display:flex;flex-direction:column;}
+.contact-name{font-size:11px;font-weight:500;color:var(--text);}
+.contact-num{font-size:10px;color:var(--muted);}
+.contact-btn.emergency .contact-name{color:var(--red);}
+
 /* PAYROLL */
 .pay-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;box-shadow:var(--shadow);}
 .pay-nav-btn{background:var(--accent-lt);border:1.5px solid var(--accent2);border-radius:var(--rsm);color:var(--accent);font-size:18px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:'DM Sans',sans-serif;}
@@ -273,6 +284,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <!-- DASHBOARD -->
   <div class="view active" id="dashView">
     <div class="chipbar" id="chipbar"></div>
+
+    <!-- EMERGENCY CONTACTS (Nati only) -->
+    <div id="contactsStrip" style="display:none;padding:0 24px 4px">
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:8px">Emergency Contacts</div>
+      <div class="contacts-strip" style="padding:0">
+        <a class="contact-btn emergency" href="tel:999">
+          <span class="contact-ico">🚨</span>
+          <div class="contact-info"><span class="contact-name">Police</span><span class="contact-num">999</span></div>
+        </a>
+        <a class="contact-btn emergency" href="tel:995">
+          <span class="contact-ico">🚒</span>
+          <div class="contact-info"><span class="contact-name">Fire / Ambulance</span><span class="contact-num">995</span></div>
+        </a>
+        <a class="contact-btn" href="tel:97697800">
+          <span class="contact-ico">👤</span>
+          <div class="contact-info"><span class="contact-name">George (Maddie's brother)</span><span class="contact-num">9769 7800</span></div>
+        </a>
+      </div>
+    </div>
 
     <!-- TOGGLE TABS -->
     <div class="tab-row">
@@ -640,6 +670,8 @@ function init(){
   document.getElementById('pinSection').style.display = isAdmin ? 'block' : 'none';
   /* Nati cannot add or edit tasks */
   document.querySelector('.fab').style.display = S.user === 'Nati' ? 'none' : 'flex';
+  /* Show emergency contacts only for Nati */
+  document.getElementById('contactsStrip').style.display = S.user === 'Nati' ? 'flex' : 'none';
   initPayrollIdx(); render(); renderHist(); renderPerms(); renderPayroll();
   setTimeout(checkDue,900);
 }
@@ -742,11 +774,9 @@ function visible(){
       return !t.completed && Array.isArray(t.assign) && t.assign.includes('Nati');
     });
   }
-  /* Maddie and Justin see tasks in their permitted categories + assigned to them */
-  var p=(S.perms&&S.perms[S.user])||Object.keys(CATS);
+  /* Maddie and Justin see all tasks */
   return (S.tasks||[]).filter(function(t){
-    if(t.completed) return false;
-    return p.includes(t.cat) || (Array.isArray(t.assign) && t.assign.includes(S.user));
+    return !t.completed;
   });
 }
 
