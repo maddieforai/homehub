@@ -189,6 +189,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .ncls{color:var(--dim);cursor:pointer;font-size:20px;padding:4px;}
 
 .view{display:none;}.view.active{display:block;}
+
+/* PAYROLL */
+.pay-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;box-shadow:var(--shadow);}
+.pay-nav-btn{background:var(--accent-lt);border:1.5px solid var(--accent2);border-radius:var(--rsm);color:var(--accent);font-size:18px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.pay-nav-btn:active{opacity:.7;}
+.pay-nav-label{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--text);}
+.pay-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.pay-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 10px;box-shadow:var(--shadow);}
+.pay-col-hdr{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:8px;text-align:center;}
+.pay-amt-input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;padding:7px 8px;outline:none;text-align:center;margin-bottom:6px;}
+.pay-amt-input:focus{border-color:var(--accent2);background:var(--surface);}
+.pay-amt-readonly{background:var(--surface2);border-radius:var(--rsm);padding:7px 8px;text-align:center;font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px;}
+.pay-notes{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rsm);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;padding:6px 8px;outline:none;resize:none;height:48px;margin-bottom:8px;}
+.pay-notes:focus{border-color:var(--accent2);}
+.pay-notes-readonly{background:var(--surface2);border-radius:var(--rsm);padding:6px 8px;font-size:11px;color:var(--muted);min-height:32px;margin-bottom:8px;word-break:break-word;}
+.pay-sig-row{border-top:1px solid var(--border);padding-top:8px;margin-bottom:6px;}
+.pay-sig-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-weight:500;}
+.pay-sig-btn{width:100%;padding:7px 4px;border-radius:var(--rsm);font-size:11px;font-weight:500;cursor:pointer;border:1px solid;font-family:'DM Sans',sans-serif;text-align:center;}
+.psb-sign{background:var(--accent-lt);color:var(--accent);border-color:rgba(107,79,53,.2);}
+.psb-signed{background:var(--green-bg);color:var(--green);border-color:rgba(46,125,82,.2);font-size:10px;}
+.pay-sig-img{width:100%;max-height:28px;object-fit:contain;display:block;margin-bottom:2px;}
+.pay-sig-date{font-size:9px;color:var(--green);text-align:center;}
+.pay-awaiting{font-size:10px;color:var(--dim);text-align:center;padding:4px 0;}
 </style>
 </head>
 <body>
@@ -262,6 +285,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
   </div>
 
+  <!-- PAYROLL -->
+  <div class="view" id="payrollView">
+    <div class="sec" style="padding-top:20px">
+      <div class="sec-hdr"><span class="sec-ttl">Nati's Payroll</span></div>
+      <!-- Month Navigator -->
+      <div class="pay-nav">
+        <button class="pay-nav-btn" onclick="payNavPrev()">&#8592;</button>
+        <div class="pay-nav-label" id="payNavLabel"></div>
+        <button class="pay-nav-btn" onclick="payNavNext()">&#8594;</button>
+      </div>
+      <div id="payrollContent"></div>
+      <button class="btnp" style="margin-top:8px" onclick="exportPayrollPDF()">⬇ Export PDF</button>
+    </div>
+  </div>
+
   <!-- HISTORY -->
   <div class="view" id="historyView">
     <div class="sec" style="padding-top:20px">
@@ -314,6 +352,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <rect x="14" y="14" width="7" height="7" rx="1.5"/>
       </svg>Dashboard
     </div>
+    <div class="nitem" id="nav-payroll" onclick="showView('payroll')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/>
+      </svg>Payroll
+    </div>
     <div class="nitem" id="nav-history" onclick="showView('history')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/>
@@ -325,6 +368,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>Settings
     </div>
+  </div>
+</div>
+
+<!-- SIGNATURE MODAL -->
+<div class="overlay" id="sigModal">
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="sheet-title" id="sigTitle">Sign to Acknowledge</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px" id="sigDesc"></div>
+    <div class="fg" style="margin-bottom:12px">
+      <label class="fl">Date of Payment / Receipt</label>
+      <input class="fi" id="sigDate" type="date">
+    </div>
+    <div style="border:1.5px solid var(--border);border-radius:var(--rsm);overflow:hidden;margin-bottom:12px;background:#fff;">
+      <canvas id="sigCanvas" style="width:100%;height:180px;display:block;touch-action:none;"></canvas>
+    </div>
+    <button class="btns" style="margin-bottom:10px" onclick="clearSig()">Clear</button>
+    <button class="btnp" onclick="saveSig()">Confirm Signature</button>
+    <button class="btns" onclick="closeM('sigModal')">Cancel</button>
   </div>
 </div>
 
@@ -493,7 +555,8 @@ function save(){
     pin: S.pin,
     tasks: S.tasks||[],
     perms: S.perms,
-    log: (S.log||[]).slice(0,200)
+    log: (S.log||[]).slice(0,200),
+    payroll: S.payroll||{}
   };
   db.ref('homehub').set(toSave).catch(function(e){
     toast('⚠️ Could not save. Check your connection.');
@@ -506,13 +569,14 @@ function startSync(){
   db.ref('homehub').on('value', function(snap){
     var data = snap.val();
     if(data){
-      S.pin   = data.pin   || S.pin;
-      S.tasks = data.tasks || [];
-      S.perms = data.perms || S.perms;
-      S.log   = data.log   || [];
+      S.pin     = data.pin     || S.pin;
+      S.tasks   = data.tasks   || [];
+      S.perms   = data.perms   || S.perms;
+      S.log     = data.log     || [];
+      S.payroll = data.payroll || {};
     }
     if(document.getElementById('app').style.display === 'block'){
-      render(); renderHist(); renderPerms();
+      initPayrollIdx(); render(); renderHist(); renderPerms(); renderPayroll();
     }
   }, function(err){
     toast('⚠️ Sync error: '+err.message);
@@ -576,7 +640,7 @@ function init(){
   document.getElementById('pinSection').style.display = isAdmin ? 'block' : 'none';
   /* Nati cannot add or edit tasks */
   document.querySelector('.fab').style.display = S.user === 'Nati' ? 'none' : 'flex';
-  render(); renderHist(); renderPerms();
+  initPayrollIdx(); render(); renderHist(); renderPerms(); renderPayroll();
   setTimeout(checkDue,900);
 }
 
@@ -776,7 +840,7 @@ function showDet(id){
     <div class="handle"></div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
       <div class="sheet-title" style="margin-bottom:0">${t.name}</div>
-      ${S.user !== 'Nati' ? '<button class="tbtn btn-edit" style="margin-top:6px" onclick="editTask(\'' + t.id + '\');closeM(\'detModal\')">Edit</button>' : ''}
+      ${S.user !== 'Nati' ? `<button class="tbtn btn-edit" style="margin-top:6px" onclick="editTask('${t.id}');closeM('detModal')">Edit</button>` : ''}
     </div>
     <div style="margin-bottom:18px"><span class="badge ${cat.cls}">${cat.label}</span></div>
     <div class="dgrid">
@@ -812,7 +876,7 @@ function markDone(id){
 /* ── HISTORY ── */
 function renderHist(){
   const list=document.getElementById('histList');
-  if(!S.log.length){list.innerHTML=`<div class="empty"><div class="empty-ico">📜</div><div class="empty-txt">No completions yet.</div></div>`;return;}
+  if(!(S.log||[]).length){list.innerHTML=`<div class="empty"><div class="empty-ico">📜</div><div class="empty-txt">No completions yet.</div></div>`;return;}
   list.innerHTML=S.log.map(function(h){return'<div class="hentry"><div class="hdot"></div><div class="htxt"><strong>'+h.task+'</strong> — '+h.by+'</div><div class="hdate">'+fmtDateObjShort(parseDate(h.date))+'</div></div>';}).join('');
 }
 
@@ -979,6 +1043,271 @@ function closeM(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.overlay').forEach(o=>{
   o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 });
+
+/* ── PAYROLL ── */
+var PAYROLL_MONTHS = (function(){
+  var months = [];
+  var d = new Date(2026, 2, 1);
+  var endD = new Date(2028, 3, 1);
+  while(d < endD){
+    var y = d.getFullYear();
+    var m = d.getMonth();
+    var isFirst = (y===2026 && m===2);
+    months.push({
+      key: y+'-'+String(m+1).padStart(2,'0'),
+      label: new Date(y,m,1).toLocaleDateString('en-SG',{month:'long',year:'numeric'}),
+      defSalary: isFirst ? 346.20 : 900.00,
+      defAllowance: isFirst ? 96.20 : 250.00,
+      salDue: isFirst ? '25 Mar 2026' : '25 '+new Date(y,m,1).toLocaleDateString('en-SG',{month:'short',year:'numeric'}),
+      allwDue: isFirst ? '22 Mar 2026' : '1 '+new Date(y,m,1).toLocaleDateString('en-SG',{month:'short',year:'numeric'})
+    });
+    d.setMonth(d.getMonth()+1);
+  }
+  return months;
+})();
+
+var currentPayIdx = 0;
+var sigContext = null;
+var isDrawing = false;
+
+function initPayrollIdx(){
+  /* Default to current month */
+  var now = new Date();
+  var key = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  var idx = PAYROLL_MONTHS.findIndex(function(m){return m.key===key;});
+  currentPayIdx = idx >= 0 ? idx : 0;
+}
+
+function payNavPrev(){
+  if(currentPayIdx > 0){ currentPayIdx--; renderPayroll(); }
+}
+function payNavNext(){
+  if(currentPayIdx < PAYROLL_MONTHS.length-1){ currentPayIdx++; renderPayroll(); }
+}
+
+function renderPayroll(){
+  var mo = PAYROLL_MONTHS[currentPayIdx];
+  document.getElementById('payNavLabel').textContent = mo.label;
+  var recs = S.payroll || {};
+  var rec = recs[mo.key] || {};
+  var canEdit = (S.user==='Maddie' || S.user==='Justin');
+  var canEmployerSign = canEdit;
+
+  /* Arrow visibility */
+  document.querySelector('.pay-nav-btn:first-child').style.opacity = currentPayIdx===0 ? '0.3' : '1';
+  document.querySelector('.pay-nav-btn:last-child').style.opacity = currentPayIdx===PAYROLL_MONTHS.length-1 ? '0.3' : '1';
+
+  var cols = [
+    { id:'salary',    label:'Salary',    defAmt: mo.defSalary,    due: mo.salDue },
+    { id:'allowance', label:'Allowance', defAmt: mo.defAllowance, due: mo.allwDue },
+    { id:'other',     label:'Other',     defAmt: 0,               due: '' }
+  ];
+
+  function renderSigBlock(sigData, field, signerLabel, canSign){
+    var html = '<div class="pay-sig-row">';
+    html += '<div class="pay-sig-lbl">'+signerLabel+'</div>';
+    if(sigData){
+      html += '<div class="psb-signed">';
+      html += '<img class="pay-sig-img" src="' + sigData.img + '">';
+      html += '<div class="pay-sig-date">' + sigData.date + '</div>';
+      html += '</div>';
+    } else if(canSign){
+      html += '<button class="pay-sig-btn psb-sign" data-mkey="'+mo.key+'" data-field="'+field+'" onclick="openSigBtn(this)">Sign</button>';
+    } else {
+      html += '<div class="pay-awaiting">Awaiting</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  var colsHtml = '<div class="pay-cols">';
+  cols.forEach(function(col){
+    var amt = rec[col.id+'Amt'] !== undefined ? rec[col.id+'Amt'] : col.defAmt;
+    var notes = rec[col.id+'Notes'] || '';
+    var paidSig = rec[col.id+'Paid'] || null;
+    var recvSig = rec[col.id+'Recv'] || null;
+
+    colsHtml += '<div class="pay-col">';
+    colsHtml += '<div class="pay-col-hdr">'+col.label+'</div>';
+
+    /* Amount */
+    if(canEdit){
+      colsHtml += '<input class="pay-amt-input" type="number" step="0.01" value="'+(amt||'').toString()+'" placeholder="0.00" data-key="'+mo.key+'" data-col="'+col.id+'" data-field="Amt" onchange="savePayrollField(this)">';
+    } else {
+      colsHtml += '<div class="pay-amt-readonly">'+(amt ? 'SGD '+parseFloat(amt).toFixed(2) : '—')+'</div>';
+    }
+
+    /* Notes */
+    if(canEdit){
+      colsHtml += '<textarea class="pay-notes" placeholder="Notes..." data-key="'+mo.key+'" data-col="'+col.id+'" data-field="Notes" onchange="savePayrollField(this)">'+notes+'</textarea>';
+    } else if(notes){
+      colsHtml += '<div class="pay-notes-readonly">'+notes+'</div>';
+    }
+
+    /* Paid by employer first */
+    colsHtml += renderSigBlock(paidSig, col.id+'Paid', 'Paid', canEmployerSign);
+    /* Then received by Nati */
+    colsHtml += renderSigBlock(recvSig, col.id+'Recv', 'Received', S.user==='Nati');
+
+    colsHtml += '</div>';
+  });
+  colsHtml += '</div>';
+
+  document.getElementById('payrollContent').innerHTML = colsHtml;
+}
+
+function savePayrollField(el){
+  var key = el.dataset.key;
+  var col = el.dataset.col;
+  var field = el.dataset.field;
+  if(!S.payroll) S.payroll = {};
+  if(!S.payroll[key]) S.payroll[key] = {};
+  S.payroll[key][col+field] = el.value;
+  save();
+}
+
+function openSigBtn(btn){
+  openSig(btn.getAttribute('data-mkey'), btn.getAttribute('data-field'));
+}
+function openSig(monthKey, field){
+  sigContext = {monthKey:monthKey, field:field};
+  var mo = PAYROLL_MONTHS.filter(function(m){return m.key===monthKey;})[0];
+  var isPaid = field.indexOf('Paid') > -1;
+  var colName = field.replace('Paid','').replace('Recv','');
+  colName = colName.charAt(0).toUpperCase() + colName.slice(1);
+  document.getElementById('sigTitle').textContent = 'Sign to Acknowledge';
+  document.getElementById('sigDesc').textContent = mo.label+' — '+colName+' '+(isPaid?'Paid':'Received');
+  /* Set date field to today by default */
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('sigDate').value = today;
+  document.getElementById('sigModal').classList.add('open');
+  setTimeout(initCanvas, 100);
+}
+
+function initCanvas(){
+  var canvas = document.getElementById('sigCanvas');
+  var rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width > 10 ? rect.width - 4 : 300;
+  canvas.height = 180;
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle = '#1c1814';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  function getPos(e){
+    var r = canvas.getBoundingClientRect();
+    var src = e.touches ? e.touches[0] : e;
+    return {
+      x:(src.clientX-r.left)*(canvas.width/r.width),
+      y:(src.clientY-r.top)*(canvas.height/r.height)
+    };
+  }
+  canvas.onmousedown = canvas.ontouchstart = function(e){
+    e.preventDefault(); isDrawing=true;
+    var p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);
+  };
+  canvas.onmousemove = canvas.ontouchmove = function(e){
+    e.preventDefault(); if(!isDrawing)return;
+    var p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke();
+  };
+  canvas.onmouseup = canvas.ontouchend = function(e){
+    e.preventDefault(); isDrawing=false;
+  };
+}
+
+function clearSig(){
+  var canvas = document.getElementById('sigCanvas');
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle='#fff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+}
+
+function saveSig(){
+  if(!sigContext) return;
+  var canvas = document.getElementById('sigCanvas');
+  var ctx = canvas.getContext('2d');
+  var data = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+  var blank = true;
+  for(var i=0;i<data.length;i+=4){
+    if(data[i]<250||data[i+1]<250||data[i+2]<250){blank=false;break;}
+  }
+  if(blank){alert('Please draw your signature first.');return;}
+  var img = canvas.toDataURL('image/png');
+  var rawDate = document.getElementById('sigDate').value;
+  var parts = rawDate.split('-');
+  var today = parts.length===3 ? new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2])).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'}) : new Date().toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
+  if(!S.payroll) S.payroll={};
+  if(!S.payroll[sigContext.monthKey]) S.payroll[sigContext.monthKey]={};
+  S.payroll[sigContext.monthKey][sigContext.field] = {img:img, date:today, by:S.user};
+  save();
+  closeM('sigModal');
+  renderPayroll();
+  toast('Signature saved.');
+  sigContext=null;
+}
+
+
+/* ── PAYROLL PDF EXPORT ── */
+function exportPayrollPDF(){
+  var mo = PAYROLL_MONTHS[currentPayIdx];
+  var recs = S.payroll || {};
+  var rec = recs[mo.key] || {};
+
+  var cols = [
+    {id:'salary',    label:'Salary'},
+    {id:'allowance', label:'Allowance'},
+    {id:'other',     label:'Other'}
+  ];
+
+  function sigBlock(sig, label){
+    if(!sig) return '<tr><td style="padding:6px 10px;color:#999;font-size:11px">'+label+'</td><td style="padding:6px 10px;color:#bbb;font-size:11px">Not yet signed</td></tr>';
+    return '<tr><td style="padding:6px 10px;font-size:11px;color:#555">'+label+'</td><td style="padding:6px 10px"><img src="'+sig.img+'" style="height:32px;max-width:140px;object-fit:contain"><br><span style="font-size:10px;color:#2e7d52">'+sig.date+'</span></td></tr>';
+  }
+
+  var colSections = cols.map(function(col){
+    var amt = rec[col.id+'Amt'] !== undefined ? rec[col.id+'Amt'] : (col.id==='salary'? mo.defSalary : col.id==='allowance'? mo.defAllowance : 0);
+    var notes = rec[col.id+'Notes'] || '';
+    var paidSig = rec[col.id+'Paid'] || null;
+    var recvSig = rec[col.id+'Recv'] || null;
+    var amtDisplay = amt ? 'SGD '+parseFloat(amt).toFixed(2) : '—';
+
+    return '<div style="margin-bottom:20px;border:1px solid #e0ddd8;border-radius:8px;overflow:hidden">'
+      +'<div style="background:#f0e6d8;padding:10px 14px;font-weight:600;font-size:13px;color:#6b4f35;letter-spacing:1px;text-transform:uppercase">'+col.label+'</div>'
+      +'<table style="width:100%;border-collapse:collapse">'
+      +'<tr><td style="padding:8px 10px;font-size:12px;color:#555;width:40%">Amount</td><td style="padding:8px 10px;font-size:14px;font-weight:600;color:#1c1814">'+amtDisplay+'</td></tr>'
+      +(notes ? '<tr><td style="padding:6px 10px;font-size:12px;color:#555">Notes</td><td style="padding:6px 10px;font-size:12px;color:#555">'+notes+'</td></tr>' : '')
+      +sigBlock(paidSig, 'Paid')
+      +sigBlock(recvSig, 'Received')
+      +'</table></div>';
+  }).join('');
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<style>body{font-family:Georgia,serif;max-width:600px;margin:40px auto;color:#1c1814;padding:0 20px}'
+    +'h1{font-size:28px;font-weight:400;letter-spacing:3px;text-transform:uppercase;color:#6b4f35;margin-bottom:4px}'
+    +'.sub{font-size:12px;color:#7a7068;letter-spacing:2px;text-transform:uppercase;margin-bottom:30px}'
+    +'hr{border:none;border-top:1px solid #e2ddd6;margin:20px 0}'
+    +'@media print{body{margin:20px}}'
+    +'</style></head><body>'
+    +'<h1>Home Hub</h1>'
+    +'<div class="sub">Payroll Record</div>'
+    +'<hr>'
+    +'<div style="font-size:20px;font-weight:600;margin-bottom:4px">'+mo.label+'</div>'
+    +'<div style="font-size:12px;color:#7a7068;margin-bottom:20px">Employee: Nati &nbsp;|&nbsp; Exported: '+new Date().toLocaleDateString('en-SG',{day:'numeric',month:'long',year:'numeric'})+'</div>'
+    +colSections
+    +'<hr>'
+    +'<div style="font-size:10px;color:#b0a89e;text-align:center;margin-top:16px">Generated by Home Hub</div>'
+    +'</body></html>';
+
+  var win = window.open('','_blank');
+  if(!win){alert('Please allow popups to export PDF.');return;}
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(function(){win.print();}, 500);
+}
 
 /* ── STARTUP ── */
 loadUser();
