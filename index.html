@@ -299,15 +299,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           </div>
         </div>
       </div>
-      <div class="ssec">
-        <div class="sttl">Notifications</div>
-        <div class="scard">
-          <div class="srow" onclick="reqNotif()">
-            <span class="srlbl">Enable Push Notifications</span>
-            <span class="srval" id="nstat">Tap to enable</span>
-          </div>
-        </div>
-      </div>
+
     </div>
   </div>
 
@@ -954,13 +946,7 @@ function checkDue(){
   if(ov.length)toast(`⚠️ ${ov.map(t=>t.name).join(', ')} ${ov.length===1?'is':'are'} overdue!`);
   else if(so.length)toast(`⏰ ${so.map(t=>t.name).join(', ')} due soon!`);
 }
-function reqNotif(){
-  if(!('Notification'in window)){alert('Add this app to your home screen first, then reopen to enable notifications.');return;}
-  Notification.requestPermission().then(p=>{
-    document.getElementById('nstat').textContent=p==='granted'?'Enabled ✓':'Not enabled';
-    if(p==='granted')toast('🔔 Push notifications enabled!');
-  });
-}
+
 function toast(msg){
   const b=document.getElementById('notif');
   document.getElementById('ntxt').textContent=msg;
