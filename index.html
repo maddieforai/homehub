@@ -360,12 +360,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
       <div class="ssec" id="pinSection">
         <div class="sttl">Security</div>
-        <div class="scard">
-          <div class="srow" onclick="showPinModal()">
-            <span class="srlbl">Change PIN</span>
-            <span class="srval">→</span>
-          </div>
-        </div>
+        <div class="scard" id="pinPanel"></div>
       </div>
 
     </div>
@@ -531,7 +526,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div class="overlay" id="pinModal">
   <div class="sheet">
     <div class="handle"></div>
-    <div class="sheet-title">Change PIN</div>
+    <div class="sheet-title" id="pinModalTitle">Change PIN</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px" id="pinModalDesc"></div>
     <div class="fg">
       <label class="fl">New 4-digit PIN</label>
       <input class="fi" id="newPin" type="number" placeholder="Enter new PIN">
@@ -567,7 +563,8 @@ const CATS = {
 const PEOPLE = ['Maddie','Justin','Nati'];
 
 var S = {
-  pin:'1234', user:'Maddie',
+  pins:{Maddie:'1234', Justin:'1234', Nati:'1234'},
+  user:'Maddie',
   tasks:[],
   perms:{
     Maddie:['household','food','car','health','admin'],
@@ -582,7 +579,7 @@ var pin='', editId=null, currentTab='upcoming';
 /* ── FIREBASE SAVE ── */
 function save(){
   var toSave = {
-    pin: S.pin,
+    pins: S.pins||{Maddie:'1234',Justin:'1234',Nati:'1234'},
     tasks: S.tasks||[],
     perms: S.perms,
     log: (S.log||[]).slice(0,200),
@@ -599,14 +596,14 @@ function startSync(){
   db.ref('homehub').on('value', function(snap){
     var data = snap.val();
     if(data){
-      S.pin     = data.pin     || S.pin;
+      S.pins    = data.pins    || S.pins || {Maddie:'1234',Justin:'1234',Nati:'1234'};
       S.tasks   = data.tasks   || [];
       S.perms   = data.perms   || S.perms;
       S.log     = data.log     || [];
       S.payroll = data.payroll || {};
     }
     if(document.getElementById('app').style.display === 'block'){
-      initPayrollIdx(); render(); renderHist(); renderPerms(); renderPayroll();
+      initPayrollIdx(); render(); renderHist(); renderPerms(); renderPayroll(); renderPinPanel();
     }
   }, function(err){
     toast('⚠️ Sync error: '+err.message);
@@ -638,7 +635,8 @@ function kp(d){if(pin.length>=4)return; pin+=d; dots(); if(pin.length===4)setTim
 function kdel(){pin=pin.slice(0,-1); dots(); document.getElementById('pinErr').textContent='';}
 function dots(){for(var i=1;i<=4;i++)document.getElementById('d'+i).classList.toggle('on',i<=pin.length);}
 function chkPin(){
-  if(pin===S.pin){
+  var userPin = (S.pins && S.pins[S.user]) || '1234';
+  if(pin===userPin){
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='block';
     init();
@@ -672,7 +670,7 @@ function init(){
   document.querySelector('.fab').style.display = S.user === 'Nati' ? 'none' : 'flex';
   /* Show emergency contacts only for Nati */
   document.getElementById('contactsStrip').style.display = S.user === 'Nati' ? 'flex' : 'none';
-  initPayrollIdx(); render(); renderHist(); renderPerms(); renderPayroll();
+  initPayrollIdx(); render(); renderHist(); renderPerms(); renderPayroll(); renderPinPanel();
   setTimeout(checkDue,900);
 }
 
@@ -1061,11 +1059,37 @@ function toast(msg){
 function closeNotif(){document.getElementById('notif').style.display='none';}
 
 /* ── PIN ── */
-function showPinModal(){document.getElementById('newPin').value='';document.getElementById('pinModal').classList.add('open');}
+var pinTargetUser = null;
+
+function renderPinPanel(){
+  if(S.user==='Nati') return;
+  var rows = '';
+  /* Own PIN always shown */
+  rows += '<div class="srow" onclick="showPinModal(\''+S.user+'\')"><span class="srlbl">Change my PIN</span><span class="srval">→</span></div>';
+  /* Maddie can also change Justin and Nati PINs */
+  if(S.user==='Maddie'){
+    rows += '<div class="srow" onclick="showPinModal(\'Justin\')"><span class="srlbl">Change Justin PIN</span><span class="srval">→</span></div>';
+    rows += '<div class="srow" onclick="showPinModal(\'Nati\')"><span class="srlbl">Change Nati PIN</span><span class="srval">→</span></div>';
+  }
+  document.getElementById('pinPanel').innerHTML = rows;
+}
+
+function showPinModal(targetUser){
+  pinTargetUser = targetUser || S.user;
+  document.getElementById('newPin').value='';
+  document.getElementById('pinModalTitle').textContent = 'Change PIN';
+  document.getElementById('pinModalDesc').textContent = 'Setting PIN for: '+pinTargetUser;
+  document.getElementById('pinModal').classList.add('open');
+}
+
 function savePin(){
-  const np=String(document.getElementById('newPin').value).trim();
+  var np=String(document.getElementById('newPin').value).trim();
   if(np.length!==4||isNaN(np)){alert('Please enter exactly 4 digits.');return;}
-  S.pin=np; save(); closeM('pinModal'); toast('🔒 PIN updated.');
+  if(!S.pins) S.pins={Maddie:'1234',Justin:'1234',Nati:'1234'};
+  S.pins[pinTargetUser]=np;
+  save(); closeM('pinModal');
+  toast('🔒 PIN updated for '+pinTargetUser+'.');
+  pinTargetUser=null;
 }
 
 /* ── NAV ── */
