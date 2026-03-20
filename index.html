@@ -286,11 +286,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           </div>
         </div>
       </div>
-      <div class="ssec">
+      <div class="ssec" id="permSection">
         <div class="sttl">Category Access per User</div>
         <div class="scard" id="permPanel"></div>
       </div>
-      <div class="ssec">
+      <div class="ssec" id="pinSection">
         <div class="sttl">Security</div>
         <div class="scard">
           <div class="srow" onclick="showPinModal()">
@@ -578,6 +578,12 @@ function init(){
   document.getElementById('hdate').textContent=now.toLocaleDateString('en-SG',{weekday:'long',day:'numeric',month:'long'});
   document.getElementById('avatar').textContent=S.user[0];
   document.getElementById('susr').textContent=S.user;
+  /* Only Maddie can see permissions and PIN settings */
+  var isAdmin = S.user === 'Maddie';
+  document.getElementById('permSection').style.display = isAdmin ? 'block' : 'none';
+  document.getElementById('pinSection').style.display = isAdmin ? 'block' : 'none';
+  /* Nati cannot add or edit tasks */
+  document.querySelector('.fab').style.display = S.user === 'Nati' ? 'none' : 'flex';
   render(); renderHist(); renderPerms();
   setTimeout(checkDue,900);
 }
@@ -674,10 +680,17 @@ function switchTab(tab){
 
 /* ── RENDER ── */
 function visible(){
-  const p=(S.perms&&S.perms[S.user])||Object.keys(CATS);
-  return (S.tasks||[]).filter(t=>
-    p.includes(t.cat) || (Array.isArray(t.assign) && t.assign.includes(S.user))
-  );
+  /* Nati only sees tasks explicitly assigned to her */
+  if(S.user === 'Nati'){
+    return (S.tasks||[]).filter(function(t){
+      return Array.isArray(t.assign) && t.assign.includes('Nati');
+    });
+  }
+  /* Maddie and Justin see tasks in their permitted categories + assigned to them */
+  var p=(S.perms&&S.perms[S.user])||Object.keys(CATS);
+  return (S.tasks||[]).filter(function(t){
+    return p.includes(t.cat) || (Array.isArray(t.assign) && t.assign.includes(S.user));
+  });
 }
 
 function render(){
@@ -771,7 +784,7 @@ function showDet(id){
     <div class="handle"></div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
       <div class="sheet-title" style="margin-bottom:0">${t.name}</div>
-      <button class="tbtn btn-edit" style="margin-top:6px" onclick="editTask('${t.id}');closeM('detModal')">Edit</button>
+      ${S.user !== 'Nati' ? '<button class="tbtn btn-edit" style="margin-top:6px" onclick="editTask(\'' + t.id + '\');closeM(\'detModal\')">Edit</button>' : ''}
     </div>
     <div style="margin-bottom:18px"><span class="badge ${cat.cls}">${cat.label}</span></div>
     <div class="dgrid">
