@@ -602,8 +602,10 @@ function switchTab(tab){
 
 /* ── RENDER ── */
 function visible(){
-  const p=S.perms[S.user]||Object.keys(CATS);
-  return S.tasks.filter(t=>p.includes(t.cat));
+  const p=(S.perms&&S.perms[S.user])||Object.keys(CATS);
+  return (S.tasks||[]).filter(t=>
+    p.includes(t.cat) || (Array.isArray(t.assign) && t.assign.includes(S.user))
+  );
 }
 
 function render(){
@@ -635,7 +637,7 @@ function renderUpcoming(tasks, list){
     return d<=14;
   });
   if(!upcoming.length){
-    list.innerHTML=`<div class="empty"><div class="empty-ico">✅</div><div class="empty-txt">All clear! Nothing due<br>in the next 14 days.<br><br><span style="font-size:13px">Switch to <strong>All Tasks</strong> to see everything.</span></div></div>`;
+    list.innerHTML=`<div class="empty"><div class="empty-ico">✅</div><div class="empty-txt">All clear! Nothing due in the next 14 days.<br><br><span style="font-size:13px;color:var(--accent);cursor:pointer" onclick="switchTab('all')">→ View all ${tasks.length} task${tasks.length!==1?'s':''}</span></div></div>`;
     return;
   }
   const ord={over:0,soon:1,ok:2};
@@ -643,11 +645,12 @@ function renderUpcoming(tasks, list){
 }
 
 function renderAll(tasks, list){
-  // Sort: overdue first, then by due date ascending
-  const sorted=[...tasks].sort((a,b)=>{
-    const da=dueDate(a), db=dueDate(b);
-    return da-db;
-  });
+  if(!tasks.length){
+    list.innerHTML=`<div class="empty"><div class="empty-ico">🏠</div><div class="empty-txt">No reminders yet.<br>Tap <strong>+</strong> to add your first one.</div></div>`;
+    return;
+  }
+  // Sort by due date ascending (overdue first naturally)
+  const sorted=[...tasks].sort((a,b)=>dueDate(a)-dueDate(b));
   list.innerHTML=sorted.map(t=>cardHTML(t,true)).join('');
 }
 
