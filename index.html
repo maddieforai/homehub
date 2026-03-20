@@ -939,7 +939,7 @@ function showAdd(){
   document.getElementById('delBtn').style.display='none';
   ['tName','tLink','tLinkLbl','tNotes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('tCat').value='household';
-  document.getElementById('tType').value='recurring';
+  document.getElementById('tType').value='oneoff';
   document.getElementById('tInt').value=3;
   document.getElementById('tUnit').value='months';
   document.getElementById('tLast').value=new Date().toISOString().split('T')[0];
