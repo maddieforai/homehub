@@ -457,7 +457,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
+/* ── FIREBASE CONFIG ── */
+var fbConfig = {
+  apiKey: "AIzaSyD6QwybnYQ693vFUgOIQgUlJNfisSoW6R4",
+  authDomain: "home-hub-46f9f.firebaseapp.com",
+  databaseURL: "https://home-hub-46f9f-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "home-hub-46f9f",
+  storageBucket: "home-hub-46f9f.firebasestorage.app",
+  messagingSenderId: "370086510803",
+  appId: "1:370086510803:web:fda0c5729a9e1d50211426"
+};
+firebase.initializeApp(fbConfig);
+var db = firebase.database();
+
 const CATS = {
   household:{label:'Household',cls:'b-household'},
   food:     {label:'Food',     cls:'b-food'},
@@ -467,38 +482,75 @@ const CATS = {
 };
 const PEOPLE = ['Maddie','Justin','Nati'];
 
-let S = {
+var S = {
   pin:'1234', user:'Maddie',
-  tasks:[{
-    id:'t1', name:'Water Filter', cat:'household', type:'recurring',
-    int:3, unit:'months', last:'2026-01-18', remind:14,
-    assign:['Maddie','Justin','Nati'],
-    link:'', linklbl:'', notes:'',
-    hist:[{date:'2026-01-18',by:'Maddie'}]
-  }],
+  tasks:[],
   perms:{
     Maddie:['household','food','car','health','admin'],
     Justin:['household','food','car','health','admin'],
     Nati:  ['household','food']
   },
-  log:[{date:'2026-01-18',task:'Water Filter',by:'Maddie'}]
+  log:[]
 };
 
-let pin='', editId=null, currentTab='upcoming';
+var pin='', editId=null, currentTab='upcoming';
 
-function load(){try{const s=localStorage.getItem('hh4');if(s)S=JSON.parse(s);}catch(e){}}
-function save(){try{localStorage.setItem('hh4',JSON.stringify(S));}catch(e){}}
+/* ── FIREBASE SAVE ── */
+function save(){
+  var toSave = {
+    pin: S.pin,
+    tasks: S.tasks||[],
+    perms: S.perms,
+    log: (S.log||[]).slice(0,200)
+  };
+  db.ref('homehub').set(toSave).catch(function(e){
+    toast('⚠️ Could not save. Check your connection.');
+  });
+  try{localStorage.setItem('hh_user', S.user);}catch(e){}
+}
+
+/* ── FIREBASE REAL-TIME SYNC ── */
+function startSync(){
+  db.ref('homehub').on('value', function(snap){
+    var data = snap.val();
+    if(data){
+      S.pin   = data.pin   || S.pin;
+      S.tasks = data.tasks || [];
+      S.perms = data.perms || S.perms;
+      S.log   = data.log   || [];
+    }
+    if(document.getElementById('app').style.display === 'block'){
+      render(); renderHist(); renderPerms();
+    }
+  }, function(err){
+    toast('⚠️ Sync error: '+err.message);
+  });
+}
+
+/* ── LOAD USER (per device) ── */
+function loadUser(){
+  try{
+    var u = localStorage.getItem('hh_user');
+    if(u && PEOPLE.indexOf(u) > -1){
+      S.user = u;
+      /* pre-select the right button */
+      document.querySelectorAll('.ubtn').forEach(function(b){
+        b.classList.toggle('active', b.textContent.trim()===u);
+      });
+    }
+  }catch(e){}
+}
 
 /* ── LOGIN ── */
 function selUser(name,btn){
   S.user=name;
-  document.querySelectorAll('.ubtn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.ubtn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   pin=''; dots(); document.getElementById('pinErr').textContent='';
 }
 function kp(d){if(pin.length>=4)return; pin+=d; dots(); if(pin.length===4)setTimeout(chkPin,120);}
 function kdel(){pin=pin.slice(0,-1); dots(); document.getElementById('pinErr').textContent='';}
-function dots(){for(let i=1;i<=4;i++)document.getElementById('d'+i).classList.toggle('on',i<=pin.length);}
+function dots(){for(var i=1;i<=4;i++)document.getElementById('d'+i).classList.toggle('on',i<=pin.length);}
 function chkPin(){
   if(pin===S.pin){
     document.getElementById('loginScreen').style.display='none';
@@ -511,6 +563,7 @@ function chkPin(){
 }
 function logout(){
   pin=''; dots();
+  try{localStorage.removeItem('hh_user');}catch(e){}
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('app').style.display='none';
   document.getElementById('pinErr').textContent='';
@@ -519,8 +572,8 @@ function logout(){
 
 /* ── INIT ── */
 function init(){
-  const now=new Date(), h=now.getHours();
-  const g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  var now=new Date(), h=now.getHours();
+  var g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
   document.getElementById('htitle').textContent=g+', '+S.user;
   document.getElementById('hdate').textContent=now.toLocaleDateString('en-SG',{weekday:'long',day:'numeric',month:'long'});
   document.getElementById('avatar').textContent=S.user[0];
@@ -928,7 +981,11 @@ document.querySelectorAll('.overlay').forEach(o=>{
   o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 });
 
-load();
+/* ── STARTUP ── */
+loadUser();
+/* Show loading state while Firebase connects */
+document.getElementById('loginScreen').innerHTML += '';
+startSync();
 </script>
 </body>
 </html>
