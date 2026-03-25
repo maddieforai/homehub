@@ -190,6 +190,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 .view{display:none;}.view.active{display:block;}
 
+/* CHORES */
+.chore-tips-wrap{margin:0 24px 16px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow);}
+.chore-tips-toggle{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--accent-lt);cursor:pointer;font-size:14px;font-weight:500;color:var(--accent);}
+.chore-tips{background:var(--surface);padding:14px 16px;display:none;}
+.chore-tips.open{display:block;}
+.tips-list{padding-left:18px;list-style:disc;}
+.tips-list li{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px;}
+.tips-list li:last-child{margin-bottom:0;}
+.chore-tab-row{display:flex;gap:6px;padding:0 24px 16px;overflow-x:auto;scrollbar-width:none;}
+.chore-tab-row::-webkit-scrollbar{display:none;}
+.chore-tab{flex-shrink:0;padding:8px 16px;border-radius:100px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--border);color:var(--muted);background:var(--surface);font-family:'DM Sans',sans-serif;transition:all .2s;}
+.chore-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.chore-section{margin:0 24px 16px;}
+.chore-room{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--text);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.chore-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--surface2);}
+.chore-item:last-child{border-bottom:none;}
+.chore-dot{width:7px;height:7px;border-radius:50%;background:var(--accent2);flex-shrink:0;margin-top:6px;}
+.chore-text{font-size:14px;color:var(--muted);line-height:1.5;}
+.chore-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow);}
+
 /* EMERGENCY CONTACTS */
 .contacts-strip{display:flex;gap:6px;padding:0 24px 14px;overflow-x:auto;scrollbar-width:none;}
 .contacts-strip::-webkit-scrollbar{display:none;}
@@ -315,6 +335,39 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
   </div>
 
+  <!-- CHORES -->
+  <div class="view" id="choresView">
+    <div class="app-header" style="padding-top:54px;padding-bottom:8px">
+      <div>
+        <div class="hdate">Household Guide</div>
+        <div class="htitle">Chore List</div>
+      </div>
+    </div>
+
+    <!-- TOP TIPS -->
+    <div class="chore-tips-wrap">
+      <div class="chore-tips-toggle" onclick="toggleTips()">
+        <span>💡 Top Tips</span>
+        <span id="tipsArrow">▾</span>
+      </div>
+      <div class="chore-tips" id="chore-tips">
+        <ul class="tips-list">
+          <li>Help us come back to a clean, refreshing home. Familiarise yourself with where things are kept so you can put things back where they belong.</li>
+          <li>Minimise things on surfaces unless they are meant to be there — e.g. photos, flowers, lights, candles, tissue boxes.</li>
+          <li>Small things make the difference — how display items are placed, the direction things face (e.g. cushions), wardrobe organisation.</li>
+          <li>Communication is key. Feel free to check if things need to be thrown out. It's ok to put things away, but try to remember where — always put the same things back in the same place.</li>
+          <li>Tidy up as soon as possible, so the place is always neat and clear.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- FREQUENCY TABS -->
+    <div class="chore-tab-row" id="choreTabs"></div>
+
+    <!-- CHORE LIST -->
+    <div id="choreContent"></div>
+  </div>
+
   <!-- PAYROLL -->
   <div class="view" id="payrollView">
     <div class="sec" style="padding-top:20px">
@@ -376,6 +429,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <rect x="3" y="14" width="7" height="7" rx="1.5"/>
         <rect x="14" y="14" width="7" height="7" rx="1.5"/>
       </svg>Dashboard
+    </div>
+    <div class="nitem" id="nav-chores" onclick="showView('chores')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+      </svg>Chores
     </div>
     <div class="nitem" id="nav-payroll" onclick="showView('payroll')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -670,7 +728,7 @@ function init(){
   document.querySelector('.fab').style.display = S.user === 'Nati' ? 'none' : 'flex';
   /* Show emergency contacts only for Nati */
   document.getElementById('contactsStrip').style.display = S.user === 'Nati' ? 'flex' : 'none';
-  initPayrollIdx(); render(); renderHist(); renderPerms(); renderPayroll(); renderPinPanel();
+  initPayrollIdx(); render(); renderHist(); renderPerms(); renderPayroll(); renderPinPanel(); renderChores();
   setTimeout(checkDue,900);
 }
 
@@ -1104,6 +1162,181 @@ function closeM(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.overlay').forEach(o=>{
   o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 });
+
+/* ── CHORES ── */
+var CHORES = {
+  'Daily': {
+    'Whole House': [
+      'Vacuum floor.',
+      'Open windows (close when it rains). Pull curtains open to let in sunlight.',
+      'Clear surfaces of cups, plates and stray items.',
+      'Turn on dehumidifier in each room for 1 hour (windows closed) — check and empty water tank.',
+      'Swap cupboard dehumidifiers when they turn orange.',
+      'Organise display items.',
+      'Organise loose items — put them back in place.',
+      'Check that tissue boxes are filled.'
+    ],
+    'Kitchen': [
+      'Wipe all surfaces.',
+      'Clean all dishes and put them away.',
+      'Clean stove.',
+      'Fold all plastic bags.',
+      'Top up water in the fridge water bottle.',
+      'Clear surfaces of cups, plates and stray items.',
+      'Clean microwave or oven if used.'
+    ],
+    'Toilets': [
+      'Clean mirror.',
+      'Wipe shower glass and walls.',
+      'Wipe toilet bowl.',
+      'Dry floor.',
+      'Wipe sink area.',
+      'Clear drain.',
+      'Put stray items back in place.',
+      'Check for toilet paper — one in the hoop, one spare.'
+    ],
+    'Outside Area': [
+      'Put all shoes away.',
+      'Organise display items on shoe cupboard.',
+      'Vacuum and arrange mat.'
+    ],
+    'Bedrooms': [
+      'Make bed.',
+      'Organise items on side tables and dresser — put things back in place.',
+      'Clear clothes from the floor.',
+      'Dust and wipe table and dresser tops.'
+    ],
+    'Study Rooms': [
+      'Wipe desks.',
+      'Stack books and documents on table.',
+      'Clear stationery.'
+    ]
+  },
+  'Every Evening': {
+    'Whole House': [
+      'Close windows after 5pm.'
+    ],
+    'Kitchen': [
+      'Take out trash.'
+    ],
+    'Bedrooms': [
+      'Draw curtains after 5pm.'
+    ]
+  },
+  'Twice a Week': {
+    'Whole House': [
+      'Mop floors.',
+      'Empty dry trash.'
+    ],
+    'Laundry': [
+      'Wash clothes in hamper — clear each hamper twice a week. Wash in cold, then dry, iron and hang.',
+      'Check for anything that needs handwashing.'
+    ]
+  },
+  'Weekly': {
+    'Whole House': [
+      'Wipe off dust on all surfaces and display items.',
+      'Wipe all doorknobs and light switches.',
+      'Water plants.'
+    ],
+    'Kitchen': [
+      'Wash water jugs.',
+      'Clean water bottle in fridge.',
+      'Wipe down cabinets.',
+      'Change sponge.'
+    ],
+    'Toilets': [
+      'Empty trash can.',
+      'Wipe undersink shelves.',
+      'Deep wash with detergent.'
+    ],
+    'Outside Area': [
+      'Wipe shoe cabinet surface.',
+      'Check and organise contents in shoe cabinet.'
+    ],
+    'Bedrooms': [
+      'Wipe closet doors.'
+    ],
+    'Study Rooms': [
+      'Wipe monitors, keyboard, mouse etc.'
+    ],
+    'Laundry': [
+      'Change bedsheets — use vinegar and baking soda to wash (skip softener).'
+    ],
+    'Grocery Shopping': [
+      'Once a week to the wet market.'
+    ]
+  },
+  'Fortnightly': {
+    'Whole House': [
+      'Vacuum behind and under furniture.',
+      'Wipe windows (inside only).',
+      'Wipe glass frames of wall pictures (use a new cloth).'
+    ],
+    'Kitchen': [
+      'Clean fridge shelves.',
+      'Take out recyclables.',
+      'Wash kitchen towels.'
+    ],
+    'Toilets': [
+      'Wash bathroom mats.'
+    ]
+  },
+  'Monthly': {
+    'Whole House': [
+      'Clean fan and wipe fan blades.',
+      'Wipe things and shelves inside sliding cupboards.',
+      'Vacuum sofa and armchairs.'
+    ],
+    'Kitchen': [
+      'Wipe shelves thoroughly — clear everything first.'
+    ],
+    'Outside Area': [
+      'Clean inside of shoe cabinet.'
+    ],
+    'Bedrooms': [
+      'Wipe top of cupboards.'
+    ]
+  }
+}
+
+var currentChoreTab = 'Daily';
+
+function toggleTips(){
+  var el = document.getElementById('chore-tips');
+  var arrow = document.getElementById('tipsArrow');
+  el.classList.toggle('open');
+  arrow.textContent = el.classList.contains('open') ? '▴' : '▾';
+}
+
+function renderChores(){
+  var freqs = Object.keys(CHORES);
+
+  /* Tabs */
+  document.getElementById('choreTabs').innerHTML = freqs.map(function(f){
+    var active = f===currentChoreTab ? ' active' : '';
+    return '<button class="chore-tab'+active+'" data-freq="'+f+'" onclick="switchChoreTab(this.dataset.freq)">'+f+'</button>';
+  }).join('');
+
+  /* Content */
+  var rooms = CHORES[currentChoreTab];
+  var html = '';
+  Object.keys(rooms).forEach(function(room){
+    var items = rooms[room];
+    html += '<div class="chore-section"><div class="chore-card">';
+    html += '<div class="chore-room">'+room+'</div>';
+    items.forEach(function(item){
+      html += '<div class="chore-item"><div class="chore-dot"></div><div class="chore-text">'+item+'</div></div>';
+    });
+    html += '</div></div>';
+  });
+  document.getElementById('choreContent').innerHTML = html;
+}
+
+function switchChoreTab(freq){
+  currentChoreTab = freq;
+  renderChores();
+}
 
 /* ── PAYROLL ── */
 var PAYROLL_MONTHS = (function(){
